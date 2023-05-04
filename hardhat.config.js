@@ -10,7 +10,6 @@ const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "https://eth-sepolia"
 const MUMBAY_RPC_URL = process.env.MUMBAY_RPC_URL
 const BSC_RPC_URL = process.env.BSC_RPC_URL
 
-
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "0xkey"
 const ETHERSCAM_API_KEY = process.env.ETHERSCAM_API_KEY || "API_KEY"
 const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY || "API_KEY"
@@ -60,7 +59,7 @@ module.exports = {
     token: "ETH",
   },
   solidity: "0.8.18",
-  nameAccounts: {
+  namedAccounts: {
     deployer: {
       default: 0,
     },

@@ -5,11 +5,13 @@
 // Testing
 //SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
+import "hardhat/console.sol";
+
 error Raffle__NotEnoughETHEntered();
 error Raffle__TransferFailed();
 error Raffle__NotOpen();
@@ -21,7 +23,8 @@ error Raffle__UpKeedpNotNeeded(uint currentBalance, uint numPlayers, uint rafleS
  * @notice This contract is for creatinf a untamperable decentralized smart contract
  * @dev This implmets chainLink VRF v2 and chainlink keepers
  */
-abstract contract Raffle is VRFConsumerBaseV2 ,  KeeperCompatibleInterface{
+contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
+
    /*Type declaration*/
    enum RaffleState{
         OPEN,
@@ -76,12 +79,29 @@ abstract contract Raffle is VRFConsumerBaseV2 ,  KeeperCompatibleInterface{
         //Emit and event when we update a dynamic array or mapping
         emit RaffleEnter(msg.sender);
     }
+     /**
+     *  @dev that is th function that the cahinlink keeper nodes call ther look for the upkeepNeeded 
+     * to return true.
+     * The following should be true in order to return true
+     * 1 Our time interval should have passed
+     * 2 the lottery should have atleast 1 player and have some eth
+     * 3 our supscription in feded with link
+     * 4 lottery should be in a open 'state'
+     * */
+    function checkUpkeep(bytes memory /*checkdata*/) public view override
+    returns(bool upKeepNeeded, bytes memory  /*performData*/ ){
+        bool isOpen = (RaffleState.OPEN == s_raffleState);
+        bool timePass = ((block.timestamp - s_lastTimeStamp) > i_interval);
+        bool hasPlayers = (s_players.length > 0);
+        bool hasBalance = address(this).balance > 0 ;
+        upKeepNeeded = (isOpen && timePass && hasPlayers && hasBalance);
+    }
     //Request the random number
     //Do something with the number
     // 2 transaction proccess
-    function performUpkeep(bytes calldata /* perforData*/) external{ 
+    function performUpkeep(bytes calldata /* perforData*/) external override{ 
         
-        (bool upKeepNeeded, ) = checkUpKeep("");
+        (bool upKeepNeeded, ) = checkUpkeep("");
 
         if(!upKeepNeeded){
             revert Raffle__UpKeedpNotNeeded(address(this).balance, s_players.length, uint(s_raffleState) );
@@ -111,23 +131,7 @@ abstract contract Raffle is VRFConsumerBaseV2 ,  KeeperCompatibleInterface{
         emit WinnerPicked(recentWinner);
     }
 
-    /**
-     *  @dev that is th function that the cahinlink keeper nodes call ther look for the upkeepNeeded 
-     * to return true.
-     * The following should be true in order to return true
-     * 1 Our time interval should have passed
-     * 2 the lottery should have atleast 1 player and have some eth
-     * 3 our supscription in feded with link
-     * 4 lottery should be in a open 'state'
-     * */
-    function checkUpKeep(bytes memory /*checkdata*/) public 
-    returns(bool upKeepNeeded, bytes memory /* performData*/ ){
-        bool isOpen = (RaffleState.OPEN == s_raffleState);
-        bool timePass = ((block.timestamp - s_lastTimeStamp) > i_interval);
-        bool hasPlayers = (s_players.length > 0);
-        bool hasBalance = address(this).balance > 0 ;
-        upKeepNeeded = (isOpen && timePass && hasPlayers && hasBalance);
-    }
+   
     function getEntrenceFee () public view returns(uint){
         return i_entranceFee;
     }
