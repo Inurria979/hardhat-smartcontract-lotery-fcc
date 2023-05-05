@@ -48,6 +48,7 @@ const { assert, expect } = require("chai")
               raffle.enterRaffle({ value: raffleEntranceFee })
             ).to.emit(raffle, "RaffleEnter")
         })
+        // Falla
         it("does not allow entrance when raffle is calculating", async () => {
             await raffle.enterRaffle({value: raffleEntranceFee})
             await network.provider.send("evm_increaseTime", [interval.toNumber() +1])
