@@ -15,7 +15,7 @@ import "hardhat/console.sol";
 error Raffle__NotEnoughETHEntered();
 error Raffle__TransferFailed();
 error Raffle__NotOpen();
-error Raffle__UpKeedpNotNeeded(uint currentBalance, uint numPlayers, uint rafleState) ;
+error Raffle__UpKeepNotNeeded(uint currentBalance, uint numPlayers, uint rafleState) ;
 
 /**
  * @title A sample Raffle Contract
@@ -104,7 +104,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         (bool upKeepNeeded, ) = checkUpkeep("");
 
         if(!upKeepNeeded){
-            revert Raffle__UpKeedpNotNeeded(address(this).balance, s_players.length, uint(s_raffleState) );
+            revert Raffle__UpKeepNotNeeded(address(this).balance, s_players.length, uint(s_raffleState) );
         }
         s_raffleState = RaffleState.CALCULATING;  
         uint requestId = i_vrfCoordinator.requestRandomWords(
@@ -155,5 +155,8 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     }
     function requestConfirmations() public pure returns(uint){
         return REQUEST_CONFIRMATIONS;
+    }
+    function getInterval() public view returns(uint){
+        return i_interval;
     }
 }
